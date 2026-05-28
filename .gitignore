@@ -35,8 +35,9 @@ kg_data/candidates/
 # Tier 3 downloaded resources (large, downloaded on demand)
 ~/.axiom_sc/
 
-# Claude Code session memory (local only — not for version control)
+# Claude Code session memory and internal spec (local only — not for version control)
 .claude/
+CLAUDE.md
 
 # macOS
 .DS_Store
