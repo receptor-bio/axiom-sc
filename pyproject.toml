@@ -53,7 +53,12 @@ source = ["axiom_sc"]
 omit = [
     "axiom_sc/annotator.py",            # full pipeline stub
     "axiom_sc/tier1/*",                  # AXIOMTier1 MLP — weights not yet trained
+    "axiom_sc/tier2/scenic_runner.py",   # requires pyscenic subprocess (scenic-env)
     "axiom_sc/tier2/scenic_worker.py",   # GPL worker — runs in scenic-env subprocess only
+    "axiom_sc/tier2/sctype_scorer.py",   # requires anndata/sklearn — tested locally
+    "axiom_sc/tier2/gnn_propagator.py",  # requires anndata — tested locally
+    "axiom_sc/tier3/*",                  # requires scvelo/anndata (pip install axiom-sc[science])
+    "axiom_sc/input/*",                  # tested via axiom-playground API tests, not SDK tests
     "axiom_sc/pipelines/*",              # pipeline orchestration stubs
     "axiom_sc/kg/review_cli.py",         # interactive terminal CLI — tested via batch_approve
     "axiom_sc/cli.py",                   # CLI entry points — tested via integration

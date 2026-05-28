@@ -323,6 +323,7 @@ def test_references_generate_md_offline(tmp_path):
 
 def test_fetch_citation_mocked_entrez():
     """fetch_citation returns formatted APA citation; covers Bio.Entrez path."""
+    pytest.importorskip("Bio", reason="biopython not installed (pip install axiom-sc[science])")
     from axiom_sc.kg.references import fetch_citation
     from unittest.mock import MagicMock
 
@@ -351,6 +352,7 @@ def test_fetch_citation_mocked_entrez():
 
 def test_fetch_citation_mocked_short_author_list():
     """fetch_citation with ≤3 authors joins them with semicolons."""
+    pytest.importorskip("Bio", reason="biopython not installed (pip install axiom-sc[science])")
     from axiom_sc.kg.references import fetch_citation
     from unittest.mock import MagicMock
 
@@ -374,6 +376,7 @@ def test_fetch_citation_mocked_short_author_list():
 
 def test_fetch_citation_empty_record():
     """fetch_citation with no records returned gives a graceful fallback."""
+    pytest.importorskip("Bio", reason="biopython not installed (pip install axiom-sc[science])")
     from axiom_sc.kg.references import fetch_citation
     from unittest.mock import MagicMock
 
