@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.eggs/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Model weights (large binaries — stored on HuggingFace, not git)
+model_weights/*.pt
+model_weights/*.bin
+model_weights/*.safetensors
+
+# KG candidates (generated, not source-controlled)
+kg_data/candidates/
+
+# Tier 3 downloaded resources (large, downloaded on demand)
+~/.axiom_sc/
+
+# Claude Code session memory (local only — not for version control)
+.claude/
+
+# macOS
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.bak

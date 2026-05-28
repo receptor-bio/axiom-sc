@@ -1,0 +1,13 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.10"}
+      - run: pip install -e ".[dev]"
+      # cov-fail-under and omit list are in pyproject.toml [tool.coverage.*]
+      - run: pytest tests/ -v --cov=axiom_sc --cov-report=xml --cov-config=pyproject.toml
+      - uses: codecov/codecov-action@v4

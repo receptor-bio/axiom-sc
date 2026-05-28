@@ -1,0 +1,83 @@
+[
+  {
+    "speciesType": "Human",
+    "tissueType": "thymus",
+    "cellName": "T regulatory cell",
+    "cellType": "Normal",
+    "geneSymbol": "FOXP3",
+    "PMID": "12612578",
+    "markerResource": "Experiment"
+  },
+  {
+    "speciesType": "Human",
+    "tissueType": "thymus",
+    "cellName": "T regulatory cell",
+    "cellType": "Normal",
+    "geneSymbol": "IL2RA",
+    "PMID": "15378097",
+    "markerResource": "Experiment"
+  },
+  {
+    "speciesType": "Human",
+    "tissueType": "blood",
+    "cellName": "Natural killer cell",
+    "cellType": "Normal",
+    "geneSymbol": "NCAM1",
+    "PMID": "19229299",
+    "markerResource": "Experiment"
+  },
+  {
+    "speciesType": "Human",
+    "tissueType": "blood",
+    "cellName": "Plasmacytoid dendritic cell",
+    "cellType": "Normal",
+    "geneSymbol": "SIGLEC1",
+    "PMID": "26122975",
+    "markerResource": "Experiment"
+  },
+  {
+    "speciesType": "Human",
+    "tissueType": "blood",
+    "cellName": "Plasmacytoid dendritic cell",
+    "cellType": "Normal",
+    "geneSymbol": "IRF7",
+    "PMID": "26122975",
+    "markerResource": "Experiment"
+  },
+  {
+    "speciesType": "Mouse",
+    "tissueType": "spleen",
+    "cellName": "B cell",
+    "cellType": "Normal",
+    "geneSymbol": "Cd19",
+    "PMID": "12488248",
+    "markerResource": "Experiment"
+  },
+  {
+    "speciesType": "Human",
+    "tissueType": "tumor",
+    "cellName": "Cancer cell",
+    "cellType": "Cancer",
+    "geneSymbol": "EGFR",
+    "PMID": "1234567",
+    "markerResource": "Experiment"
+  },
+  {
+    "speciesType": "Human",
+    "tissueType": "lung",
+    "cellName": "AT2 cell",
+    "cellType": "Normal",
+    "geneSymbol": "SFTPC",
+    "PMID": "22006027",
+    "markerResource": "Experiment"
+  },
+  {
+    "speciesType": "Human",
+    "tissueType": "thymus",
+    "cellName": "T regulatory cell",
+    "cellType": "Normal",
+    "geneSymbol": "FOXP3",
+    "PMID": "12612578",
+    "markerResource": "Experiment"
+  }
+]

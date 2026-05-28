@@ -1,0 +1,96 @@
+# AXIOM-SC Knowledge Graph — References
+
+Auto-generated from KG rule PMIDs. Do not edit manually.
+Source KG: kg_data/oracle_kg_v0.2.0.json
+Generated: see git log
+
+---
+
+- Nutt SL, et al. (1999) Commitment to the B-lymphoid lineage depends on the transcription factor Pax5. Nature 401:556-62. PMID:10524622
+- Sallusto F, et al. (1999) Two subsets of memory T lymphocytes with distinct homing potentials and effector functions. Nature 401:708-12. PMID:10537110
+- Chilosi M, et al. (1999) CD138/syndecan-1: a useful immunohistochemical marker of normal and neoplastic plasma cells on routine trephine bone marrow biopsies. Mod Pathol 12:1101-6. PMID:10619261
+- Rollinger-Holzinger I, et al. (2000) LST1: a gene with extensive alternative splicing and immunomodulatory function. J Immunol 164:3169-76. PMID:10706707
+- Szabo SJ, et al. (2000) A novel transcription factor, T-bet, directs Th1 lineage commitment. Cell 100:655-69. PMID:10761931
+- Muramatsu M, et al. (2000) Class switch recombination and hypermutation require activation-induced cytidine deaminase (AID), a potential RNA editing enzyme. Cell 102:553-63. PMID:11007474
+- Dzionek A, et al. (2000) BDCA-2, BDCA-3, and BDCA-4: three markers for distinct subsets of dendritic cells in human peripheral blood. J Immunol 165:6037-46. PMID:11086035
+- Schaerli P, et al. (2000) CXC chemokine receptor 5 expression defines follicular homing T cells with B cell helper function. J Exp Med 192:1553-62. PMID:11104798
+- Said JW, et al. (2001) TCL1 oncogene expression in B cell subsets from lymphoid hyperplasia and distinct classes of B cell lymphoma. Lab Invest 81:555-64. PMID:11304575
+- Donato R (2001) S100: a multigenic family of calcium-modulated proteins of the EF-hand type with intracellular and extracellular functional roles. Int J Biochem Cell Biol 33:637-68. PMID:11390274
+- Reimold AM, et al. (2001) Plasma cell differentiation requires the transcription factor XBP-1. Nature 412:300-7. PMID:11460154
+- Moller HJ, et al. (2002) Identification of the hemoglobin scavenger receptor/CD163 as a natural soluble protein in plasma. Blood 99:378-80. PMID:11756196
+- Robertson MJ (2002) Role of chemokines in the biology of natural killer cells. J Leukoc Biol 71:173-83. PMID:11818437
+- Anderson MS, et al. (2002) Projection of an immunological self shadow within the thymus by the aire protein. Science 298:1395-401. PMID:12376594
+- Schiavoni G, et al. (2002) ICSBP is essential for the development of mouse type I interferon-producing cells and for the generation and activation of CD8alpha(+) dendritic cells. J Exp Med 196:1415-25. PMID:12461077
+- Gordon S (2003) Alternative activation of macrophages. Nat Rev Immunol 3:23-35. PMID:12511873
+- Nutku E, et al. (2003) Ligation of Siglec-8: a selective mechanism for induction of human eosinophil apoptosis. Blood 101:5014-20. PMID:12609831
+- Fontenot JD; Gavin MA; Rudensky AY (2003) Foxp3 programs the development and function of CD4+CD25+ regulatory T cells. Nat Immunol 4:330-6. PMID:12612578
+- Colonna M (2003) TREMs in the immune system and beyond. Nat Rev Immunol 3:445-53. PMID:12776204
+- Sutherland DR; Keating A (1992) The CD34 antigen: structure, biology, and potential clinical applications. J Hematother 1:115-29. PMID:1285404
+- Geissmann F; Jung S; Littman DR (2003) Blood monocytes consist of two principal subsets with distinct migratory properties. Immunity 19:71-82. PMID:12871640
+- Lemarchand P, et al. (1992) Translocation of a small cytosolic calcium-binding protein (MRP-8) to plasma membrane correlates with human neutrophil activation. J Biol Chem 267:19379-82. PMID:1326551
+- Shapiro-Shelef M, et al. (2003) Blimp-1 is required for the formation of immunoglobulin secreting plasma cells and pre-plasma memory B cells. Immunity 19:607-20. PMID:14563324
+- Suzuki S, et al. (2004) Critical roles of interferon regulatory factor 4 in CD11bhighCD8alpha- dendritic cell development. Proc Natl Acad Sci U S A 101:8981-6. PMID:15184678
+- Allen CD, et al. (2004) Germinal center dark and light zone organization is mediated by CXCR4 and CXCR5. Nat Immunol 5:943-52. PMID:15300245
+- Guma M, et al. (2004) Imprint of human cytomegalovirus infection on the NK cell receptor repertoire. Blood 104:3664-71. PMID:15304389
+- Wolk K, et al. (2004) IL-22 increases the innate immunity of tissues. Immunity 21:241-54. PMID:15308104
+- Barber DL, et al. (2006) Restoring function in exhausted CD8 T cells during chronic viral infection. Nature 439:682-7. PMID:16382236
+- Bettelli E, et al. (2006) Reciprocal developmental pathways for the generation of pathogenic effector TH17 and regulatory T cells. Nature 441:235-8. PMID:16648838
+- Wu Y, et al. (2006) FOXP3 controls regulatory T cell function through cooperation with NFAT. Cell 126:375-87. PMID:16873067
+- van Vliet SJ, et al. (2006) Differential regulation of C-type lectin expression on tolerogenic dendritic cell subsets. Immunobiology 211:577-85. PMID:16920496
+- Wright SD, et al. (1990) CD14, a receptor for complexes of lipopolysaccharide (LPS) and LPS binding protein. Science 249:1431-3. PMID:1698311
+- Ivanov II, et al. (2006) The orphan nuclear receptor RORgammat directs the differentiation program of proinflammatory IL-17+ T helper cells. Cell 126:1121-33. PMID:16990136
+- Bendelac A; Savage PB; Teyton L (2007) The biology of NKT cells. Annu Rev Immunol 25:297-336. PMID:17150027
+- Marson A, et al. (2007) Foxp3 occupancy and regulation of key target genes during T-cell stimulation. Nature 445:931-5. PMID:17237765
+- Murata S, et al. (2007) Regulation of CD8+ T cell development by thymus-specific proteasomes. Science 316:1349-53. PMID:17540904
+- Holmes WE, et al. (1991) Structure and functional expression of a human interleukin-8 receptor. Science 253:1278-80. PMID:1840701
+- Cisse B, et al. (2008) Transcription factor E2-2 is an essential and specific regulator of plasmacytoid dendritic cell development. Cell 135:37-48. PMID:18854153
+- Hildner K, et al. (2008) Batf3 deficiency reveals a critical role for CD8alpha+ dendritic cells in cytotoxic T cell immunity. Science 322:1097-100. PMID:19008445
+- Sanos SL, et al. (2009) RORgammat and commensal microflora are required for the differentiation of mucosal interleukin 22-producing NKp46+ cells. Nat Immunol 10:83-91. PMID:19029903
+- Blackburn SD, et al. (2009) Coregulation of CD8+ T cell exhaustion by multiple inhibitory receptors during chronic viral infection. Nat Immunol 10:29-37. PMID:19043418
+- Sancho D, et al. (2009) Identification of a dendritic cell receptor that couples sensing of necrosis to immunity. Nature 458:899-903. PMID:19219027
+- Johnston RJ, et al. (2009) Bcl6 and Blimp-1 are reciprocal and antagonistic regulators of T follicular helper cell differentiation. Science 325:1006-10. PMID:19608860
+- Thornton AM, et al. (2010) Expression of Helios, an Ikaros transcription factor family member, differentiates thymic-derived from peripherally induced Foxp3+ T regulatory cells. J Immunol 184:3433-41. PMID:20181882
+- Neill DR, et al. (2010) Nuocytes represent a new innate effector leukocyte that mediates type-2 immunity. Nature 464:1367-70. PMID:20200518
+- Crozat K, et al. (2010) The XC chemokine receptor 1 is a conserved selective marker of mammalian cells homologous to mouse CD8alpha+ dendritic cells. J Exp Med 207:1283-92. PMID:20479118
+- Villanueva CJ; Tontonoz P (2010) Licensing PPARgamma to work in macrophages. Immunity 33:647-9. PMID:21094459
+- Crotty S (2011) Follicular helper CD4 T cells (TFH). Annu Rev Immunol 29:621-63. PMID:21314428
+- Vanderslice P, et al. (1990) Human mast cell tryptase: multiple cDNAs and genes reveal a multigene serine protease family. Proc Natl Acad Sci U S A 87:3811-5. PMID:2187193
+- Mjosberg JM, et al. (2011) Human IL-25- and IL-33-responsive type 2 innate lymphoid cells are defined by expression of CRTH2 and CD161. Nat Immunol 12:1055-62. PMID:21909091
+- Gordon SM, et al. (2012) The transcription factors T-bet and Eomes control key checkpoints of natural killer cell maturation. Immunity 36:55-67. PMID:22261438
+- Langlet C, et al. (2012) CD64 expression distinguishes monocyte-derived and conventional dendritic cells and reveals their distinct role during intramuscular immunization. J Immunol 188:1751-60. PMID:22262658
+- Hoyler T, et al. (2012) The transcription factor GATA-3 controls cell fate and maintenance of type 2 innate lymphoid cells. Immunity 37:634-48. PMID:23063333
+- Bernink JH, et al. (2013) Human type 1 innate lymphoid cells accumulate in inflamed mucosal tissues. Nat Immunol 14:221-9. PMID:23334791
+- Spits H, et al. (2013) Innate lymphoid cells--a proposal for uniform nomenclature. Nat Rev Immunol 13:145-9. PMID:23348417
+- Casimiro I; Chinnasamy P; Sibinga NE (2013) Genetic inactivation of the allograft inflammatory factor-1 locus. Genesis 51:734-40. PMID:23929822
+- Reantragoon R, et al. (2013) Antigen-loaded MR1 tetramers define T cell receptor heterogeneity in mucosal-associated invariant T cells. J Exp Med 210:2305-20. PMID:24101382
+- Enders A, et al. (2014) Zinc-finger protein ZFP318 is essential for expression of IgD, the alternatively spliced Igh product made by mature B lymphocytes. Proc Natl Acad Sci U S A 111:4513-8. PMID:24616512
+- Tedder TF; Isaacs CM (1989) Isolation of cDNAs encoding the CD19 antigen of human and mouse B lymphocytes. A new member of the immunoglobulin superfamily. J Immunol 143:712-7. PMID:2472450
+- Klose CSN, et al. (2014) Differentiation of type 1 ILCs from a common progenitor to all helper-like innate lymphoid cell lineages. Cell 157:340-356. PMID:24725403
+- Nitta T, et al. (1989) Involvement of CD56 (NKH-1/Leu-19 antigen) as an adhesion molecule in natural killer-target cell interaction. J Exp Med 170:1757-61. PMID:2478655
+- Halliley JL, et al. (2015) Long-Lived Plasma Cells Are Contained within the CD19(-)CD38(hi)CD138(+) Subset in Human Bone Marrow. Immunity 43:132-45. PMID:26187412
+- Bottcher JP, et al. (2015) Functional classification of memory CD8(+) T cells by CX3CR1 expression. Nat Commun 6:8306. PMID:26404698
+- Wilhelm TR, et al. (2016) Siglec-1-positive plasmacytoid dendritic cells (pDCs) in human peripheral blood: A semi-mature and myeloid-like subset imbalanced during protective and autoimmune responses. Clin Immunol 163:42-51. PMID:26674280
+- Brenner MB, et al. (2016) Pillars Article: Identification of a Putative Second T-cell Receptor. Nature. 1986. 322: 145-149. J Immunol 196:3509-13. PMID:27183647
+- Im SJ, et al. (2016) Defining CD8+ T cells that provide the proliferative burst after PD-1 therapy. Nature 537:417-421. PMID:27501248
+- Crinier A, et al. (2018) High-Dimensional Single-Cell Analysis Identifies Organ-Specific Signatures and Conserved NK Cell Subsets in Humans and Mice. Immunity 49:971-986.e5. PMID:30413361
+- Liu CC, et al. (1986) Identification and characterization of a pore-forming protein of human peripheral blood natural killer cells. J Exp Med 164:2061-76. PMID:3097239
+- Scott AC, et al. (2019) TOX is a critical regulator of tumour-specific T cell differentiation. Nature 571:270-274. PMID:31207604
+- Littman DR, et al. (1985) The isolation and sequence of the gene encoding T8: a molecule defining functional classes of T lymphocytes. Cell 40:237-46. PMID:3871356
+- Luster AD; Unkeless JC; Ravetch JV (1985) Gamma-interferon transcriptionally regulates an early-response gene containing homology to platelet proteins. Nature 315:672-6. PMID:3925348
+- Dialynas DP, et al. (1983) Characterization of the murine T cell surface molecule, designated L3T4, identified by monoclonal antibody GK1.5: similarity of L3T4 to the human Leu-3/T4 molecule. J Immunol 131:2445-51. PMID:6415170
+- Pfefferkorn ER; Guyre PM (1984) Inhibition of growth of Toxoplasma gondii in cultured fibroblasts by human recombinant gamma interferon. Infect Immun 44:211-6. PMID:6425215
+- Lagresle C, et al. (1995) Regulation of germinal center B cell differentiation. Role of the human APO-1/Fas (CD95) molecule. J Immunol 154:5746-56. PMID:7538529
+- Lin H; Grosschedl R (1995) Failure of B-cell differentiation in mice lacking the transcription factor EBF. Nature 376:263-7. PMID:7542362
+- Galli SJ; Tsai M; Wershil BK (1993) The c-kit receptor, stem cell factor, and mast cells. What each is teaching us about the others. Am J Pathol 142:965-74. PMID:7682764
+- Scott EW, et al. (1994) Requirement of transcription factor PU.1 in the development of multiple hematopoietic lineages. Science 265:1573-7. PMID:8079170
+- Dul JL, et al. (1996) The murine VpreB1 and VpreB2 genes both encode a protein of the surrogate light chain and are co-expressed during B cell development. Eur J Immunol 26:906-13. PMID:8625987
+- Ponath PD, et al. (1996) Molecular cloning and characterization of a human eotaxin receptor expressed selectively on eosinophils. J Exp Med 183:2437-48. PMID:8676064
+- Zhang DE, et al. (1997) Absence of granulocyte colony-stimulating factor signaling and neutrophil development in CCAAT enhancer binding protein alpha-deficient mice. Proc Natl Acad Sci U S A 94:569-74. PMID:9012825
+- Borregaard N; Cowland JB (1997) Granules of the human neutrophilic polymorphonuclear leukocyte. Blood 89:3503-21. PMID:9160655
+- Zheng W; Flavell RA (1997) The transcription factor GATA-3 is necessary and sufficient for Th2 cytokine gene expression in CD4 T cells. Cell 89:587-96. PMID:9160750
+- Hamann D, et al. (1997) Phenotypic and functional separation of memory and effector human CD8+ T cells. J Exp Med 186:1407-18. PMID:9348298
+- Bonecchi R, et al. (1998) Differential expression of chemokine receptors and chemotactic responsiveness of type 1 T helper cells (Th1s) and Th2s. J Exp Med 187:129-34. PMID:9419219
+- Braud VM, et al. (1998) HLA-E binds to natural killer cell receptors CD94/NKG2A, B and C. Nature 391:795-9. PMID:9486650
+- Pessino A, et al. (1998) Molecular cloning of NKp46: a novel member of the immunoglobulin superfamily involved in triggering of natural cytotoxicity. J Exp Med 188:953-60. PMID:9730896
+- Klein U; Rajewsky K; Kuppers R (1998) Human immunoglobulin (Ig)M+IgD+ peripheral blood B cells expressing the CD27 cell surface antigen carry somatically mutated variable region genes: CD27 as a general marker for somatically mutated (memory) B cells. J Exp Med 188:1679-89. PMID:9802980
+- D'Ambrosio D, et al. (1998) Selective up-regulation of chemokine receptors CCR4 and CCR8 upon activation of polarized human type 2 Th cells. J Immunol 161:5111-5. PMID:9820476

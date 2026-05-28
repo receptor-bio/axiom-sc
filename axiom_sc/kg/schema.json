@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "AXIOM-SC KG Rule",
+  "description": "Schema for a single mechanistic rule in the AXIOM-SC knowledge graph.",
+  "type": "object",
+  "required": [
+    "cell_type",
+    "rule_id",
+    "rule_type",
+    "evidence_source",
+    "gene_or_regulon",
+    "direction",
+    "mechanistic_basis",
+    "pmid",
+    "confidence",
+    "status",
+    "tissue_context",
+    "source_db"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cell_type": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Cell type this rule applies to."
+    },
+    "rule_id": {
+      "type": "string",
+      "pattern": "^[A-Z0-9_]+$",
+      "description": "Unique identifier, e.g. TREG_NEG_001."
+    },
+    "rule_type": {
+      "type": "string",
+      "enum": ["positive", "negative", "circuit", "spatial"],
+      "description": "positive=affirmative support; negative=contradiction; circuit=co-expression requirement; spatial=niche-dependent."
+    },
+    "evidence_source": {
+      "type": "string",
+      "enum": [
+        "marker_genes",
+        "regulon",
+        "trajectory",
+        "spatial",
+        "communication",
+        "chromatin"
+      ],
+      "description": "Which evidence stream this rule draws on."
+    },
+    "gene_or_regulon": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Gene symbols or regulon names (TF symbols) that define this rule."
+    },
+    "direction": {
+      "type": "string",
+      "enum": ["high", "low", "absent", "present", "active", "inactive"],
+      "description": "The directional condition that triggers this rule."
+    },
+    "paired_with": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Additional genes that must also satisfy their condition (used in composite rules)."
+    },
+    "incompatible_with": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Cell types that are mutually exclusive with a PROVEN verdict for this type."
+    },
+    "mechanistic_basis": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Why this rule is mechanistically valid. Must cite a biological mechanism."
+    },
+    "pmid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "PubMed ID of the primary supporting paper."
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "Evidence quality for this rule."
+    },
+    "tissue_context": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tissues where this rule is valid. Empty list = universal."
+    },
+    "source_db": {
+      "type": "string",
+      "description": "Database or resource that provided the marker/regulon basis."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ACTIVE", "PENDING_REVIEW", "DEPRECATED"],
+      "description": "Only ACTIVE rules are used during annotation."
+    },
+    "added_in_version": {
+      "type": "string",
+      "description": "axiom-sc version when this rule was added.",
+      "default": ""
+    }
+  }
+}

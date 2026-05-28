@@ -1,0 +1,78 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "axiom-sc"
+version = "0.2.0"
+description = "AXIOM-SC: mechanistic cell type annotation via knowledge graph constraints"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+authors = [{name = "receptor.bio", email = "oss@receptor.bio"}]
+keywords = ["single-cell", "rna-seq", "cell-type", "annotation", "bioinformatics",
+            "knowledge-graph", "mechanistic", "attractor"]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "jsonschema>=4.17",
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+# Science stack — install with: pip install "axiom-sc[science]"
+science = [
+    "scanpy>=1.9",
+    "anndata>=0.9",
+    "scvelo>=0.3",
+    "commot>=0.0.3",
+    "cellxgene-census>=1.9",
+    "omnipath>=1.0",
+    "scikit-learn>=1.3",
+    "scipy>=1.11",
+    "torch>=2.0",
+    "biopython>=1.81",
+    "openpyxl>=3.1",
+]
+dev = ["pytest", "pytest-cov", "black", "ruff", "mypy", "pre-commit", "hatch"]
+gpu = ["cupy-cuda12x"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--tb=short"
+
+[tool.coverage.run]
+source = ["axiom_sc"]
+# Omit stub modules that are not yet implemented (Days 5-10).
+# Remove from omit list as each tier is implemented and tested.
+omit = [
+    "axiom_sc/annotator.py",            # full pipeline stub
+    "axiom_sc/tier1/*",                  # AXIOMTier1 MLP — weights not yet trained
+    "axiom_sc/tier2/scenic_worker.py",   # GPL worker — runs in scenic-env subprocess only
+    "axiom_sc/pipelines/*",              # pipeline orchestration stubs
+    "axiom_sc/kg/review_cli.py",         # interactive terminal CLI — tested via batch_approve
+    "axiom_sc/cli.py",                   # CLI entry points — tested via integration
+]
+
+[tool.coverage.report]
+# 80% on the implemented modules (profile system + KG engine + Tier 2 annotator).
+# TODO: Raise back to 80 after Days 5-10 modules are implemented and tested.
+fail_under = 80
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "\\.\\.\\.",
+]
+
+[project.scripts]
+axiom-annotate    = "axiom_sc.cli:annotate"
+axiom-kg          = "axiom_sc.cli:kg"
+axiom-benchmark   = "axiom_sc.cli:benchmark"
+axiom-train-tier1 = "axiom_sc.tier1.training.train:main"
