@@ -90,7 +90,7 @@ class KGLoader:
 
     Usage::
 
-        kg = KGLoader.from_file("kg_data/oracle_kg_v0.2.0.json")
+        kg = KGLoader.from_file(Path(axiom_sc.__file__).parent / "kg_data" / "oracle_kg_v0.2.0.json")
         rules = kg.active_rules(cell_type="Treg")
         cell_types = kg.cell_types()
     """

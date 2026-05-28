@@ -15,8 +15,9 @@ from axiom_sc.kg.seeder import CellMarker2Seeder, _normalize_cell_name, _make_ru
 from axiom_sc.kg.review_cli import batch_approve
 from axiom_sc.tier2.kg_loader import KGLoader
 
-KG_PATH = Path("kg_data/oracle_kg_v0.2.0.json")
-FIXTURE_PATH = Path("tests/fixtures/cellmarker2_sample.json")
+import axiom_sc as _axiom_sc
+KG_PATH = Path(_axiom_sc.__file__).parent / "kg_data" / "oracle_kg_v0.2.0.json"
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / "cellmarker2_sample.json"
 
 # ── seeder unit tests ─────────────────────────────────────────────────────────
 

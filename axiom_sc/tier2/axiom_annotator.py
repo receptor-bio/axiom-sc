@@ -121,7 +121,7 @@ class AxiomAnnotator:
 
     Usage::
 
-        kg = KGLoader.from_file("kg_data/oracle_kg_v0.2.0.json")
+        kg = KGLoader.from_file(Path(axiom_sc.__file__).parent / "kg_data" / "oracle_kg_v0.2.0.json")
         annotator = AxiomAnnotator(kg=kg)
         verdicts = annotator.annotate_cluster(evidence_bundle)
         best = annotator.get_best_verdict(evidence_bundle)

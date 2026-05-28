@@ -19,7 +19,7 @@ def kg_rule_count() -> int:
     import json
     from pathlib import Path
 
-    kg_path = Path(__file__).parent.parent / "kg_data" / "oracle_kg_v0.2.0.json"
+    kg_path = Path(__file__).parent / "kg_data" / "oracle_kg_v0.2.0.json"
     if not kg_path.exists():
         return 0
     with open(kg_path) as f:
@@ -60,7 +60,7 @@ def AXIOMAnnotator(
 def _load_kg_rules() -> list[dict]:
     import json
     from pathlib import Path
-    kg_path = Path(__file__).parent.parent / "kg_data" / "oracle_kg_v0.2.0.json"
+    kg_path = Path(__file__).parent / "kg_data" / "oracle_kg_v0.2.0.json"
     if not kg_path.exists():
         return []
     with open(kg_path) as f:
@@ -70,7 +70,7 @@ def _load_kg_rules() -> list[dict]:
 def _save_kg_rules(rules: list[dict]) -> None:
     import json
     from pathlib import Path
-    kg_path = Path(__file__).parent.parent / "kg_data" / "oracle_kg_v0.2.0.json"
+    kg_path = Path(__file__).parent / "kg_data" / "oracle_kg_v0.2.0.json"
     with open(kg_path, "w") as f:
         json.dump(rules, f, indent=2)
 

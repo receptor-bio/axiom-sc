@@ -15,7 +15,8 @@ import pytest
 from axiom_sc.tier2.evidence import EvidenceBundle
 from axiom_sc.tier3.stream_result import StreamResult
 
-KG_PATH = Path("kg_data/oracle_kg_v0.2.0.json")
+import axiom_sc as _axiom_sc
+KG_PATH = Path(_axiom_sc.__file__).parent / "kg_data" / "oracle_kg_v0.2.0.json"
 
 
 # ── prompts ──────────────────────────────────────────────────────────────────

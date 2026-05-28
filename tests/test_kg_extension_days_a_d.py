@@ -15,7 +15,9 @@ import pytest
 
 from axiom_sc.tier2.kg_loader import KGLoader, KGRule
 
-KG_PATH = "kg_data/oracle_kg_v0.2.0.json"
+from pathlib import Path
+import axiom_sc as _axiom_sc
+KG_PATH = str(Path(_axiom_sc.__file__).parent / "kg_data" / "oracle_kg_v0.2.0.json")
 
 DAYS_A_D_RULE_PREFIXES = [
     # Day A — retina
