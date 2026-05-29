@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 0.2.4 (2026-05-29)
+
+### Fixed
+- Removed stale `ExperimentDataPipe` references from comments in `train.py`.
+- Added `tiledbsoma>=1.12` and `tiledbsoma-ml>=1.0` to `[science]` optional
+  extra in `pyproject.toml` — previously missing, causing `ImportError` when
+  running `pip install "axiom-sc[science]"` and then calling
+  `build_streaming_datapipe()`.
+
 ## 0.2.3 (2026-05-29)
 
 ### Fixed

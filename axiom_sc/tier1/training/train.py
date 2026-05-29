@@ -408,8 +408,8 @@ if __name__ == "__main__":
 #   val_acc = train_single_model(model_idx=0, output_path="weights/model_0.pt",
 #                                 output_dir="weights/")
 #
-# Design: streams raw counts from Census via ExperimentDataPipe, normalises
-# on-the-fly (10k + log1p), avoids storing multi-GB matrices on disk.
+# Design: streams raw counts from Census via tiledbsoma-ml (ExperimentDataset),
+# normalises on-the-fly (10k + log1p), avoids storing multi-GB matrices on disk.
 # Gene vocabulary (HVGs) and label encoder are computed once from a ~500k-cell
 # sample and saved to output_dir; all subsequent model runs reuse them.
 
@@ -520,7 +520,7 @@ def build_gene_vocabulary(
     logger.info("HVG selection done: %d genes", len(gene_list))
 
     # ── 4. Get var soma_joinids for the HVGs ──────────────────────────────
-    # We need these to build the ExperimentDataPipe var_query coords.
+    # Needed for the tiledbsoma-ml ExperimentDataset var_query coords.
     # adata.var index is feature_id (Ensembl); we need soma_joinid.
     with cellxgene_census.open_soma(census_version=census_version) as census:
         var_df = census["census_data"]["homo_sapiens"]["ms"]["RNA"]["var"].read(
