@@ -398,3 +398,441 @@ def _parse_args(argv):
 
 if __name__ == "__main__":
     main()
+
+
+# ── streaming Census training (Colab / low-RAM workflow) ──────────────────────
+#
+# Public API used by the Google Colab notebook:
+#
+#   from axiom_sc.tier1.training.train import train_single_model
+#   val_acc = train_single_model(model_idx=0, output_path="weights/model_0.pt",
+#                                 output_dir="weights/")
+#
+# Design: streams raw counts from Census via ExperimentDataPipe, normalises
+# on-the-fly (10k + log1p), avoids storing multi-GB matrices on disk.
+# Gene vocabulary (HVGs) and label encoder are computed once from a ~500k-cell
+# sample and saved to output_dir; all subsequent model runs reuse them.
+
+_VOCAB_SAMPLE_CELLS = 500_000   # cells used to compute HVGs (fits in ~6 GB RAM)
+_EXCLUDED_LABELS = {            # same as data_loader.EXCLUDED_LABELS
+    "unknown", "native cell", "", "cell", "eukaryotic cell",
+}
+_MIN_CELLS_INCLUDE = 100        # drop types with fewer cells in Census
+
+
+def build_gene_vocabulary(
+    output_dir: str | Path,
+    census_version: str = "stable",
+    n_hvg: int = 2000,
+    sample_cells: int = _VOCAB_SAMPLE_CELLS,
+    random_seed: int = 42,
+) -> dict:
+    """
+    Build HVG gene list and label encoder from a Census sample.
+
+    Saves four files to output_dir (idempotent — skipped if they exist):
+      axiomtier1_genes.txt        — one HVG symbol per line
+      axiomtier1_var_ids.json     — Census var soma_joinid for each HVG
+      label_encoder.json          — {str(idx): cell_type_name}
+      model_config.json           — architecture config for load_weights()
+
+    Parameters
+    ----------
+    output_dir : str | Path
+    census_version : str
+    n_hvg : int
+    sample_cells : int     — cells drawn for HVG computation
+    random_seed : int
+
+    Returns
+    -------
+    dict with keys: n_genes, n_classes, gene_list, label_encoder, var_ids
+    """
+    try:
+        import cellxgene_census
+        import scanpy as sc
+    except ImportError:
+        raise ImportError("pip install cellxgene-census scanpy")
+
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+
+    gene_file    = out / "axiomtier1_genes.txt"
+    var_id_file  = out / "axiomtier1_var_ids.json"
+    encoder_file = out / "label_encoder.json"
+    config_file  = out / "model_config.json"
+
+    # Fast path: reuse if all four files exist
+    if all(f.exists() for f in [gene_file, var_id_file, encoder_file, config_file]):
+        logger.info("Gene vocabulary already built — reusing files in %s", out)
+        gene_list       = gene_file.read_text().strip().splitlines()
+        var_ids         = json.loads(var_id_file.read_text())
+        label_encoder   = {int(k): v for k, v in json.loads(encoder_file.read_text()).items()}
+        return dict(
+            n_genes=len(gene_list), n_classes=len(label_encoder),
+            gene_list=gene_list, label_encoder=label_encoder, var_ids=var_ids,
+        )
+
+    logger.info("Building gene vocabulary from Census (sample=%d cells) …", sample_cells)
+
+    with cellxgene_census.open_soma(census_version=census_version) as census:
+        # ── 1. Get obs metadata to build label encoder ─────────────────────
+        obs_df = census["census_data"]["homo_sapiens"].obs.read(
+            column_names=["soma_joinid", "cell_type", "is_primary_data"],
+            value_filter="is_primary_data == True",
+        ).concat().to_pandas()
+
+        ct_counts = (
+            obs_df.loc[~obs_df["cell_type"].isin(_EXCLUDED_LABELS), "cell_type"]
+            .value_counts()
+        )
+        keep_types = set(ct_counts[ct_counts >= _MIN_CELLS_INCLUDE].index)
+        obs_df = obs_df[obs_df["cell_type"].isin(keep_types)]
+
+        sorted_types = sorted(keep_types)
+        label_encoder = {i: ct for i, ct in enumerate(sorted_types)}
+
+        logger.info("Label encoder: %d cell types", len(label_encoder))
+
+        # ── 2. Sample cells for HVG computation ────────────────────────────
+        rng = np.random.default_rng(random_seed)
+        sample_ids = rng.choice(
+            obs_df["soma_joinid"].values,
+            min(sample_cells, len(obs_df)),
+            replace=False,
+        )
+
+        logger.info("Fetching %d cells for HVG computation …", len(sample_ids))
+        adata = cellxgene_census.get_anndata(
+            census=census,
+            organism="Homo sapiens",
+            measurement_name="RNA",
+            obs_coords=sample_ids.tolist(),
+            obs_column_names=["cell_type"],
+        )
+
+    # ── 3. Preprocess + HVG selection ─────────────────────────────────────
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    sc.pp.log1p(adata)
+    sc.pp.highly_variable_genes(adata, n_top_genes=n_hvg, flavor="seurat_v3")
+    adata = adata[:, adata.var["highly_variable"]].copy()
+    gene_list = list(adata.var_names)
+    logger.info("HVG selection done: %d genes", len(gene_list))
+
+    # ── 4. Get var soma_joinids for the HVGs ──────────────────────────────
+    # We need these to build the ExperimentDataPipe var_query coords.
+    # adata.var index is feature_id (Ensembl); we need soma_joinid.
+    with cellxgene_census.open_soma(census_version=census_version) as census:
+        var_df = census["census_data"]["homo_sapiens"]["ms"]["RNA"]["var"].read(
+            column_names=["soma_joinid", "feature_id", "feature_name"],
+        ).concat().to_pandas()
+
+    gene_set = set(gene_list)
+    # gene_list may be feature_id or feature_name depending on Census version
+    hvg_var = var_df[
+        var_df["feature_id"].isin(gene_set) | var_df["feature_name"].isin(gene_set)
+    ].copy()
+    # Build ordered list matching gene_list order
+    id_to_joinid = dict(zip(hvg_var["feature_id"], hvg_var["soma_joinid"]))
+    name_to_joinid = dict(zip(hvg_var["feature_name"], hvg_var["soma_joinid"]))
+    var_ids = []
+    final_gene_list = []
+    for g in gene_list:
+        jid = id_to_joinid.get(g) or name_to_joinid.get(g)
+        if jid is not None:
+            var_ids.append(int(jid))
+            final_gene_list.append(g)
+    gene_list = final_gene_list
+    logger.info("Mapped %d/%d HVGs to Census var soma_joinids", len(var_ids), n_hvg)
+
+    # ── 5. Save files ──────────────────────────────────────────────────────
+    gene_file.write_text("\n".join(gene_list))
+    var_id_file.write_text(json.dumps(var_ids))
+    encoder_file.write_text(json.dumps({str(k): v for k, v in label_encoder.items()}, indent=2))
+    save_config(out, n_genes=len(gene_list), n_classes=len(label_encoder))
+    logger.info("Vocabulary saved to %s", out)
+
+    return dict(
+        n_genes=len(gene_list), n_classes=len(label_encoder),
+        gene_list=gene_list, label_encoder=label_encoder, var_ids=var_ids,
+    )
+
+
+def save_config(
+    output_dir: str | Path,
+    n_genes: int,
+    n_classes: int,
+    hidden: int = 512,
+    n_models: int = 10,
+) -> None:
+    """Save model_config.json so AXIOMTier1Ensemble.load_weights() can reconstruct architecture."""
+    cfg = {"hidden": hidden, "n_models": n_models, "n_genes": n_genes, "n_classes": n_classes}
+    (Path(output_dir) / "model_config.json").write_text(json.dumps(cfg, indent=2))
+
+
+def build_streaming_datapipe(
+    census_version: str,
+    var_soma_joinids: list[int],
+    label_to_idx: dict,
+    batch_size: int = 512,
+    seed: int = 42,
+    shuffle: bool = True,
+):
+    """
+    Build an ExperimentDataPipe that streams raw Census counts.
+
+    Each iteration yields (X_norm, y) where:
+      X_norm : torch.Tensor float32  shape (batch, n_genes) — log1p(10k norm)
+      y      : torch.Tensor long     shape (batch,)         — class indices
+
+    Parameters
+    ----------
+    census_version : str
+    var_soma_joinids : list[int]  — soma_joinids for HVG genes (from axiomtier1_var_ids.json)
+    label_to_idx : dict           — {cell_type_str: int}
+    batch_size : int
+    seed : int
+    shuffle : bool
+    """
+    try:
+        import cellxgene_census
+        from cellxgene_census.experimental.ml import ExperimentDataPipe
+        from tiledbsoma import AxisQuery
+        import torch
+    except ImportError:
+        raise ImportError(
+            "pip install cellxgene-census tiledbsoma torch"
+        )
+
+    census = cellxgene_census.open_soma(census_version=census_version)
+    experiment = census["census_data"]["homo_sapiens"]
+
+    datapipe = ExperimentDataPipe(
+        experiment=experiment,
+        measurement_name="RNA",
+        X_name="raw",
+        obs_query=AxisQuery(value_filter="is_primary_data == True"),
+        var_query=AxisQuery(coords=(var_soma_joinids,)),
+        obs_column_names=["cell_type"],
+        batch_size=batch_size,
+        shuffle=shuffle,
+        seed=seed,
+        soma_chunk_size=20_000,
+        return_sparse_X=False,
+    )
+
+    def _normalise_and_label(batch):
+        """Normalise raw counts to log1p(10k) and map cell_type to label index."""
+        import torch
+        X_raw, obs_df = batch
+        if not isinstance(X_raw, torch.Tensor):
+            X_raw = torch.tensor(X_raw, dtype=torch.float32)
+        else:
+            X_raw = X_raw.float()
+
+        # 10k normalisation + log1p in-place
+        row_sums = X_raw.sum(dim=1, keepdim=True).clamp(min=1.0)
+        X_norm = torch.log1p(X_raw * (1e4 / row_sums))
+
+        labels = obs_df["cell_type"].map(label_to_idx)
+        valid  = labels.notna().values
+        if not valid.any():
+            return None
+
+        y = torch.tensor(labels[valid].astype(int).values, dtype=torch.long)
+        return X_norm[valid], y
+
+    # Wrap with filtering + normalisation
+    class _NormPipe:
+        def __init__(self, pipe, fn):
+            self._pipe = pipe
+            self._fn   = fn
+
+        def __iter__(self):
+            for batch in self._pipe:
+                out = self._fn(batch)
+                if out is not None:
+                    yield out
+
+        def __del__(self):
+            # Close Census connection when the datapipe is garbage-collected
+            try:
+                census.close()
+            except Exception:
+                pass
+
+    return _NormPipe(datapipe, _normalise_and_label)
+
+
+def train_single_model(
+    model_idx: int,
+    output_path: str,
+    output_dir: str,
+    census_version: str = "stable",
+    n_hvg: int = 2000,
+    epochs: int = 5,
+    batch_size: int = 512,
+    lr: float = 1e-3,
+    weight_decay: float = 1e-4,
+    hidden: int = 512,
+    patience: int = 3,
+    seed: int = 42,
+) -> float:
+    """
+    Train one model in the AXIOMTier1 ensemble using streaming Census data.
+
+    This is the Colab-facing entry point. Call from Cell 3:
+
+        val_acc = train_single_model(
+            model_idx=MODEL_IDX,
+            output_path=f"{WEIGHTS_DIR}/model_{MODEL_IDX}.pt",
+            output_dir=WEIGHTS_DIR,
+        )
+
+    On the first run it builds the HVG vocabulary (once, ~15 min).
+    Subsequent models reuse the saved vocabulary files.
+    Progress is logged every 500 batches.
+
+    Parameters
+    ----------
+    model_idx : int
+        Index of this model in the ensemble (0–9).
+    output_path : str
+        Path to save the weight file (.pt).
+    output_dir : str
+        Directory for vocabulary files (axiomtier1_genes.txt etc.).
+        Also used as a fallback to load pre-built npz splits if present.
+    census_version : str
+    n_hvg : int
+    epochs : int
+    batch_size : int
+    lr : float
+    weight_decay : float
+    hidden : int
+    patience : int   — epochs without val F1 improvement before early stopping
+    seed : int
+
+    Returns
+    -------
+    float — validation macro-F1 of the best checkpoint.
+    """
+    try:
+        import torch
+        import torch.nn as nn
+        from sklearn.metrics import f1_score
+    except ImportError:
+        raise ImportError("pip install torch scikit-learn")
+
+    from axiom_sc.tier1.axiomtier1 import AXIOMTier1Net
+
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    model_seed = seed + model_idx * 137
+    torch.manual_seed(model_seed)
+    np.random.seed(model_seed)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logger.info("train_single_model idx=%d  device=%s  seed=%d", model_idx, device, model_seed)
+
+    # ── 1. Vocabulary (build once, reuse across models) ───────────────────
+    vocab = build_gene_vocabulary(
+        output_dir=out_dir,
+        census_version=census_version,
+        n_hvg=n_hvg,
+        random_seed=seed,
+    )
+    n_genes   = vocab["n_genes"]
+    n_classes = vocab["n_classes"]
+    label_encoder  = vocab["label_encoder"]          # {int: cell_type_str}
+    label_to_idx   = {v: k for k, v in label_encoder.items()}
+    var_ids        = vocab["var_ids"]
+
+    logger.info("n_genes=%d  n_classes=%d", n_genes, n_classes)
+    save_config(out_dir, n_genes=n_genes, n_classes=n_classes, hidden=hidden)
+
+    # ── 2. Model + optimiser ──────────────────────────────────────────────
+    net = AXIOMTier1Net(n_genes=n_genes, n_classes=n_classes, hidden=hidden)
+    net.net.to(device)
+    optimizer = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
+    criterion = nn.CrossEntropyLoss()
+
+    # ── 3. Training loop ──────────────────────────────────────────────────
+    best_val_f1    = 0.0
+    best_state     = None
+    patience_count = 0
+
+    for epoch in range(epochs):
+        # ── train ──────────────────────────────────────────────────────────
+        net.net.train()
+        train_pipe = build_streaming_datapipe(
+            census_version=census_version,
+            var_soma_joinids=var_ids,
+            label_to_idx=label_to_idx,
+            batch_size=batch_size,
+            seed=model_seed + epoch,   # different shuffle each epoch
+            shuffle=True,
+        )
+        train_loss_sum = 0.0
+        n_batches = 0
+        for batch_idx, (X_batch, y_batch) in enumerate(train_pipe):
+            X_batch, y_batch = X_batch.to(device), y_batch.to(device)
+            optimizer.zero_grad()
+            logits = net(X_batch)
+            loss = criterion(logits, y_batch)
+            loss.backward()
+            optimizer.step()
+            train_loss_sum += loss.item()
+            n_batches += 1
+            if (batch_idx + 1) % 500 == 0:
+                logger.info(
+                    "  epoch %d  batch %d  avg_loss=%.4f",
+                    epoch + 1, batch_idx + 1, train_loss_sum / n_batches,
+                )
+        scheduler.step()
+
+        # ── validate (streaming, no shuffle) ──────────────────────────────
+        net.eval()
+        val_pipe  = build_streaming_datapipe(
+            census_version=census_version,
+            var_soma_joinids=var_ids,
+            label_to_idx=label_to_idx,
+            batch_size=batch_size * 4,
+            seed=model_seed,
+            shuffle=False,
+        )
+        all_preds, all_true = [], []
+        # Use ~50k validation cells (first 100 batches) for speed
+        _MAX_VAL_BATCHES = 100
+        with torch.no_grad():
+            for _vi, (X_batch, y_batch) in enumerate(val_pipe):
+                if _vi >= _MAX_VAL_BATCHES:
+                    break
+                preds = net(X_batch.to(device)).argmax(dim=1).cpu().numpy()
+                all_preds.extend(preds)
+                all_true.extend(y_batch.numpy())
+
+        val_f1 = f1_score(all_true, all_preds, average="macro", zero_division=0) if all_true else 0.0
+        logger.info(
+            "epoch %d/%d  val_macro_f1=%.4f  train_loss=%.4f  n_val_cells=%d",
+            epoch + 1, epochs, val_f1,
+            train_loss_sum / max(n_batches, 1), len(all_true),
+        )
+
+        if val_f1 > best_val_f1:
+            best_val_f1    = val_f1
+            best_state     = {k: v.cpu().clone() for k, v in net.state_dict().items()}
+            patience_count = 0
+        else:
+            patience_count += 1
+            if patience_count >= patience:
+                logger.info("Early stopping at epoch %d", epoch + 1)
+                break
+
+    # ── 4. Save best weights ──────────────────────────────────────────────
+    weight_path = Path(output_path)
+    weight_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(best_state, weight_path)
+    logger.info("Saved model_%d → %s  (best val_f1=%.4f)", model_idx, weight_path, best_val_f1)
+
+    return best_val_f1
