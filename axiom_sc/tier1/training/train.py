@@ -731,17 +731,28 @@ def train_single_model(
     best_state     = None
     patience_count = 0
 
-    import torch.nn.functional as F
+    # tiledbsoma-ml yields MiniBatch = (X, obs_df) tuples
+    # X is np.ndarray or scipy csr_matrix; obs_df is a pandas DataFrame
 
-    def _normalise(X_raw: "torch.Tensor") -> "torch.Tensor":
-        """10k normalise + log1p on a raw-count batch tensor."""
+    def _normalise(X_raw) -> "torch.Tensor":
+        """10k normalise + log1p. Accepts ndarray, csr_matrix, or Tensor."""
+        import scipy.sparse as sp
+        if sp.issparse(X_raw):
+            X_raw = X_raw.toarray()
+        if not isinstance(X_raw, torch.Tensor):
+            X_raw = torch.from_numpy(np.array(X_raw, dtype=np.float32))
         X = X_raw.float()
         row_sums = X.sum(dim=1, keepdim=True).clamp(min=1.0)
         return torch.log1p(X * (1e4 / row_sums))
 
-    def _labels_from_batch(batch: dict) -> "torch.Tensor | None":
-        """Map cell_type strings to integer indices; return None if all unknown."""
-        cell_types = batch["cell_type"]
+    def _labels_from_batch(batch) -> "torch.Tensor | None":
+        """
+        batch is a MiniBatch tuple: (X, obs_df).
+        Map obs_df["cell_type"] strings → integer indices.
+        Returns None if every cell type is unknown.
+        """
+        obs_df = batch[1]
+        cell_types = obs_df["cell_type"].tolist()
         idxs = [label_to_idx.get(ct, -1) for ct in cell_types]
         y = torch.tensor(idxs, dtype=torch.long)
         if (y < 0).all():
@@ -763,10 +774,11 @@ def train_single_model(
             train_loss_sum = 0.0
             n_batches = 0
             for batch_idx, batch in enumerate(train_loader):
+                # batch = (X_raw, obs_df)
                 y_batch = _labels_from_batch(batch)
                 if y_batch is None:
                     continue
-                X_batch = _normalise(batch["X"])
+                X_batch = _normalise(batch[0])
                 valid = y_batch >= 0
                 X_batch, y_batch = X_batch[valid].to(device), y_batch[valid].to(device)
 
@@ -807,7 +819,7 @@ def train_single_model(
                     y_batch = _labels_from_batch(batch)
                     if y_batch is None:
                         continue
-                    X_batch = _normalise(batch["X"])
+                    X_batch = _normalise(batch[0])
                     valid = y_batch >= 0
                     preds = net(X_batch[valid].to(device)).argmax(dim=1).cpu().numpy()
                     all_preds.extend(preds)

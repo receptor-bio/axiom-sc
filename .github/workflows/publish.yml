@@ -1,4 +1,5 @@
 name: Publish to PyPI
+
 on:
   push:
     tags: ["v*"]
@@ -11,19 +12,67 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.10"}
       - run: pip install -e ".[dev]"
-      # Lightweight science deps needed for tier4/5 tests and Bio-mocked tests.
       - run: pip install anndata biopython scikit-learn scipy jsonschema
       - run: pytest tests/ -v --cov=axiom_sc --cov-report=xml --cov-config=pyproject.toml
 
   publish:
-    needs: test          # publish only runs if test job passes
+    needs: test
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
-      id-token: write    # OIDC trusted publishing — no stored token needed
+      id-token: write   # OIDC trusted publishing to PyPI
+      contents: write   # needed to create GitHub Releases
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with: {python-version: "3.10"}
-      - run: pip install hatch && hatch build
-      - uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Build wheel and sdist
+        run: pip install hatch && hatch build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Extract changelog for this version
+        id: changelog
+        shell: python
+        run: |
+          import re, os, sys
+
+          tag     = os.environ["GITHUB_REF_NAME"]        # e.g. "v0.2.6"
+          version = tag.lstrip("v")                       # e.g. "0.2.6"
+          text    = open("CHANGELOG.md").read()
+
+          # Match "## 0.2.6 ..." up to (not including) the next "## " heading
+          pattern = rf"(## {re.escape(version)}.*?)(?=\n## |\Z)"
+          m = re.search(pattern, text, re.DOTALL)
+          if m:
+              notes = m.group(1).strip()
+          else:
+              print(f"Warning: no changelog section found for {version}", file=sys.stderr)
+              repo = os.environ.get("GITHUB_REPOSITORY", "receptor-bio/axiom-sc")
+              notes = f"See [CHANGELOG.md](https://github.com/{repo}/blob/main/CHANGELOG.md) for details."
+
+          delimiter = "EOF_NOTES"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"notes<<{delimiter}\n{notes}\n{delimiter}\n")
+              f.write(f"version={version}\n")
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "axiom-sc ${{ github.ref_name }}"
+          body: |
+            ${{ steps.changelog.outputs.notes }}
+
+            ---
+            **Install:**
+            ```bash
+            pip install "axiom-sc[science]==${{ github.ref_name }}"
+            ```
+
+            **PyPI:** https://pypi.org/project/axiom-sc/${{ steps.changelog.outputs.version }}/
+          draft: false
+          prerelease: false
