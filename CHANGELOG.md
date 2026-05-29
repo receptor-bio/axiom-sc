@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.2.5 (2026-05-29)
+
+### Fixed
+- Drop redundant `tiledbsoma>=1.12` from `[science]` extra — already a
+  transitive dependency of `cellxgene-census`. Keep only `tiledbsoma-ml>=0.1`
+  which is the actual new dependency for `ExperimentDataset`.
+
 ## 0.2.4 (2026-05-29)
 
 ### Fixed
