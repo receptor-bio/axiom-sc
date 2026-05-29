@@ -579,89 +579,58 @@ def build_streaming_datapipe(
     shuffle: bool = True,
 ):
     """
-    Build an ExperimentDataPipe that streams raw Census counts.
+    Stream Census batches via tiledbsoma-ml (official ExperimentDataPipe successor).
 
-    Each iteration yields (X_norm, y) where:
-      X_norm : torch.Tensor float32  shape (batch, n_genes) — log1p(10k norm)
-      y      : torch.Tensor long     shape (batch,)         — class indices
+    Requires: pip install tiledbsoma-ml
+
+    Returns (loader, census) — caller MUST call census.close() when done
+    (or use the context-manager helper _open_streaming_loader instead).
+
+    Each batch from loader is a dict:
+      batch["X"]         : torch.Tensor float32 (batch, n_genes) — raw counts
+      batch["cell_type"] : list[str]
+
+    Normalisation (10k + log1p) is applied inside train_single_model after
+    receiving each batch, keeping this function simple and composable.
 
     Parameters
     ----------
     census_version : str
-    var_soma_joinids : list[int]  — soma_joinids for HVG genes (from axiomtier1_var_ids.json)
-    label_to_idx : dict           — {cell_type_str: int}
+    var_soma_joinids : list[int]  — Census var soma_joinids for the HVG genes
+    label_to_idx : dict           — {cell_type_str: int class index}
     batch_size : int
     seed : int
     shuffle : bool
     """
     try:
+        from tiledbsoma_ml import ExperimentDataset, experiment_dataloader
         import cellxgene_census
-        from cellxgene_census.experimental.ml import ExperimentDataPipe
         from tiledbsoma import AxisQuery
-        import torch
     except ImportError:
         raise ImportError(
-            "pip install cellxgene-census tiledbsoma torch"
+            "pip install tiledbsoma-ml cellxgene-census tiledbsoma"
         )
 
     census = cellxgene_census.open_soma(census_version=census_version)
     experiment = census["census_data"]["homo_sapiens"]
 
-    datapipe = ExperimentDataPipe(
-        experiment=experiment,
+    query = experiment.axis_query(
         measurement_name="RNA",
-        X_name="raw",
         obs_query=AxisQuery(value_filter="is_primary_data == True"),
         var_query=AxisQuery(coords=(var_soma_joinids,)),
+    )
+
+    dataset = ExperimentDataset(
+        query,
+        layer_name="raw",
         obs_column_names=["cell_type"],
         batch_size=batch_size,
         shuffle=shuffle,
         seed=seed,
-        soma_chunk_size=20_000,
-        return_sparse_X=False,
     )
 
-    def _normalise_and_label(batch):
-        """Normalise raw counts to log1p(10k) and map cell_type to label index."""
-        import torch
-        X_raw, obs_df = batch
-        if not isinstance(X_raw, torch.Tensor):
-            X_raw = torch.tensor(X_raw, dtype=torch.float32)
-        else:
-            X_raw = X_raw.float()
-
-        # 10k normalisation + log1p in-place
-        row_sums = X_raw.sum(dim=1, keepdim=True).clamp(min=1.0)
-        X_norm = torch.log1p(X_raw * (1e4 / row_sums))
-
-        labels = obs_df["cell_type"].map(label_to_idx)
-        valid  = labels.notna().values
-        if not valid.any():
-            return None
-
-        y = torch.tensor(labels[valid].astype(int).values, dtype=torch.long)
-        return X_norm[valid], y
-
-    # Wrap with filtering + normalisation
-    class _NormPipe:
-        def __init__(self, pipe, fn):
-            self._pipe = pipe
-            self._fn   = fn
-
-        def __iter__(self):
-            for batch in self._pipe:
-                out = self._fn(batch)
-                if out is not None:
-                    yield out
-
-        def __del__(self):
-            # Close Census connection when the datapipe is garbage-collected
-            try:
-                census.close()
-            except Exception:
-                pass
-
-    return _NormPipe(datapipe, _normalise_and_label)
+    loader = experiment_dataloader(dataset, num_workers=2)
+    return loader, census   # caller must census.close() when done
 
 
 def train_single_model(
@@ -762,10 +731,27 @@ def train_single_model(
     best_state     = None
     patience_count = 0
 
+    import torch.nn.functional as F
+
+    def _normalise(X_raw: "torch.Tensor") -> "torch.Tensor":
+        """10k normalise + log1p on a raw-count batch tensor."""
+        X = X_raw.float()
+        row_sums = X.sum(dim=1, keepdim=True).clamp(min=1.0)
+        return torch.log1p(X * (1e4 / row_sums))
+
+    def _labels_from_batch(batch: dict) -> "torch.Tensor | None":
+        """Map cell_type strings to integer indices; return None if all unknown."""
+        cell_types = batch["cell_type"]
+        idxs = [label_to_idx.get(ct, -1) for ct in cell_types]
+        y = torch.tensor(idxs, dtype=torch.long)
+        if (y < 0).all():
+            return None
+        return y
+
     for epoch in range(epochs):
         # ── train ──────────────────────────────────────────────────────────
         net.net.train()
-        train_pipe = build_streaming_datapipe(
+        train_loader, train_census = build_streaming_datapipe(
             census_version=census_version,
             var_soma_joinids=var_ids,
             label_to_idx=label_to_idx,
@@ -773,27 +759,37 @@ def train_single_model(
             seed=model_seed + epoch,   # different shuffle each epoch
             shuffle=True,
         )
-        train_loss_sum = 0.0
-        n_batches = 0
-        for batch_idx, (X_batch, y_batch) in enumerate(train_pipe):
-            X_batch, y_batch = X_batch.to(device), y_batch.to(device)
-            optimizer.zero_grad()
-            logits = net(X_batch)
-            loss = criterion(logits, y_batch)
-            loss.backward()
-            optimizer.step()
-            train_loss_sum += loss.item()
-            n_batches += 1
-            if (batch_idx + 1) % 500 == 0:
-                logger.info(
-                    "  epoch %d  batch %d  avg_loss=%.4f",
-                    epoch + 1, batch_idx + 1, train_loss_sum / n_batches,
-                )
+        try:
+            train_loss_sum = 0.0
+            n_batches = 0
+            for batch_idx, batch in enumerate(train_loader):
+                y_batch = _labels_from_batch(batch)
+                if y_batch is None:
+                    continue
+                X_batch = _normalise(batch["X"])
+                valid = y_batch >= 0
+                X_batch, y_batch = X_batch[valid].to(device), y_batch[valid].to(device)
+
+                optimizer.zero_grad()
+                loss = criterion(net(X_batch), y_batch)
+                loss.backward()
+                optimizer.step()
+
+                train_loss_sum += loss.item()
+                n_batches += 1
+                if (batch_idx + 1) % 500 == 0:
+                    logger.info(
+                        "  epoch %d  batch %d  avg_loss=%.4f",
+                        epoch + 1, batch_idx + 1, train_loss_sum / n_batches,
+                    )
+        finally:
+            train_census.close()   # always release the Census connection
+
         scheduler.step()
 
-        # ── validate (streaming, no shuffle) ──────────────────────────────
+        # ── validate (no shuffle, first _MAX_VAL_BATCHES batches) ─────────
         net.eval()
-        val_pipe  = build_streaming_datapipe(
+        val_loader, val_census = build_streaming_datapipe(
             census_version=census_version,
             var_soma_joinids=var_ids,
             label_to_idx=label_to_idx,
@@ -802,17 +798,27 @@ def train_single_model(
             shuffle=False,
         )
         all_preds, all_true = [], []
-        # Use ~50k validation cells (first 100 batches) for speed
-        _MAX_VAL_BATCHES = 100
-        with torch.no_grad():
-            for _vi, (X_batch, y_batch) in enumerate(val_pipe):
-                if _vi >= _MAX_VAL_BATCHES:
-                    break
-                preds = net(X_batch.to(device)).argmax(dim=1).cpu().numpy()
-                all_preds.extend(preds)
-                all_true.extend(y_batch.numpy())
+        _MAX_VAL_BATCHES = 100   # ~50k cells — enough for reliable macro-F1
+        try:
+            with torch.no_grad():
+                for _vi, batch in enumerate(val_loader):
+                    if _vi >= _MAX_VAL_BATCHES:
+                        break
+                    y_batch = _labels_from_batch(batch)
+                    if y_batch is None:
+                        continue
+                    X_batch = _normalise(batch["X"])
+                    valid = y_batch >= 0
+                    preds = net(X_batch[valid].to(device)).argmax(dim=1).cpu().numpy()
+                    all_preds.extend(preds)
+                    all_true.extend(y_batch[valid].numpy())
+        finally:
+            val_census.close()
 
-        val_f1 = f1_score(all_true, all_preds, average="macro", zero_division=0) if all_true else 0.0
+        val_f1 = (
+            f1_score(all_true, all_preds, average="macro", zero_division=0)
+            if all_true else 0.0
+        )
         logger.info(
             "epoch %d/%d  val_macro_f1=%.4f  train_loss=%.4f  n_val_cells=%d",
             epoch + 1, epochs, val_f1,

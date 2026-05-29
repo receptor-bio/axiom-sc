@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 0.2.3 (2026-05-29)
+
+### Fixed
+- `build_streaming_datapipe()` rewritten to use `tiledbsoma-ml`
+  (`ExperimentDataset` + `experiment_dataloader`) instead of the removed
+  `cellxgene_census.experimental.ml.ExperimentDataPipe` which required
+  `torchdata.datapipes` (not available in Python 3.12 / modern PyTorch).
+- `train_single_model()` updated: applies 10k + log1p normalisation inline
+  per batch, filters unknown cell types via `_labels_from_batch()`, and
+  always closes the Census connection in a `finally` block after each epoch.
+
 ## 0.2.2 (2026-05-29)
 
 ### Added
